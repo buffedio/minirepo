@@ -26,12 +26,11 @@
 ## 安装
 
 ```bash
-go install github.com/buffedio/minirepo@latest   # 有 Go 工具链：装到 $(go env GOPATH)/bin
+go install github.com/buffedio/minirepo@latest   # 有 Go 工具链：装到 $(go env GOPATH)/bin；国内可先 GOPROXY=https://goproxy.cn,direct
 git clone https://github.com/buffedio/minirepo.git && cd minirepo
 make build            # 产出 ./minirepo（CGO_ENABLED=0，纯静态）
 sudo cp minirepo /usr/local/bin/
 make release          # 交叉编译 linux/{amd64,arm64} windows/amd64 darwin/{amd64,arm64} 到 dist/
-# 国内加速镜像（与主仓同一棵树）：git clone https://gitee.com/buffed/minirepo.git
 ```
 
 没有 Go 工具链：拿发布方 `make release` 产出的二进制放进 PATH（`dist/` 不入库）。
@@ -245,6 +244,7 @@ go test -fuzz FuzzExtract     -fuzztime 60s           # 撞解压(zip-slip/符�
 | 正好在 tag 上、树干净 | `v0.10.0` |
 | tag 之后有 N 个提交 | `v0.10.0-N-g<hash>` |
 | 工作区有未提交改动 | 尾巴加 `-dirty` |
+| 经 `go install` 安装 | `v0.12.0`（模块版本，无 ldflags/VCS 信息） |
 
 tag 一旦有人消费就不可变；修正走 `v0.10.1`，破坏性变更走 `v0.11.0`/`1.0.0`。
 被 force-move 过的 tag，其他已有克隆必须 `git fetch --tags --force` 才会更新——
