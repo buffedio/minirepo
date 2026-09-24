@@ -8,6 +8,7 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -60,9 +61,24 @@ func TestStaleGitLockKeepsTheReportContract(t *testing.T) {
 	if _, err := os.Stat(lock); err != nil {
 		t.Error("the failed sync removed .git/index.lock -- refusing is the whole answer, deleting is not")
 	}
-	// 完整原文不能丢:走 stderr,带归属前缀。
-	if !strings.Contains(se, "  git: fatal:") || !strings.Contains(se, "remove the file manually") {
-		t.Errorf("full git output must reach stderr with attribution, got %q", se)
+	// 完整原文不能丢:走 stderr,带归属前缀。期望值不硬编码 git 的措辞——同一句
+	// stale-lock 提示在 git 2.43 是 8 行长版(含 remove the file manually),新版是
+	// 3 行短版,耦合措辞必然随 git 升级假红(CI 实测)。以**本机 git 的原话**为基准:
+	// 同一把锁、同一条 argv 直跑一遍取原始输出,逐行核对带前缀到达,任何版本都成立。
+	if !strings.Contains(se, "  git: fatal:") {
+		t.Errorf("fatal line must reach stderr with attribution, got %q", se)
+	}
+	rawCmd := exec.Command("git", "-C", filepath.Join(ws, "proj"),
+		"checkout", "-f", "--detach", "origin/master")
+	raw, _ := rawCmd.CombinedOutput()
+	if lines := nonEmpty(string(raw)); len(lines) == 0 {
+		t.Fatalf("premise broken: git must refuse on a stale index.lock, got %q", raw)
+	} else {
+		for _, ln := range lines {
+			if !strings.Contains(se, "  git: "+ln) {
+				t.Errorf("git's own words must reach stderr with attribution; line %q missing, stderr=%q", ln, se)
+			}
+		}
 	}
 
 	// 只读命令在锁存在时必须照常可用(有意的决定:清单坏了不该让 status 也不能用)
