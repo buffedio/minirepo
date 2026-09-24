@@ -1,0 +1,2 @@
+go test fuzz v1
+string("<manifest><archive url=\"A0:\"path=\"0\"/></manifest>")

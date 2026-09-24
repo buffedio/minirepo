@@ -1,0 +1,11 @@
+# built binaries
+/minirepo
+/minirepo.exe
+minirepo-*
+dist/
+
+# workspace markers (never commit a workspace)
+.minirepo/
+
+# test artifacts
+minirepo-test-bin
