@@ -33,8 +33,8 @@ sudo cp minirepo /usr/local/bin/
 make release          # 交叉编译 linux/{amd64,arm64} windows/amd64 darwin/{amd64,arm64} 到 dist/
 ```
 
-没有 Go 工具链：拿发布方 `make release` 产出的二进制放进 PATH（`dist/` 不入库）。
-验证：`minirepo version`。
+没有 Go 工具链：到 GitHub Releases 下载对应平台的二进制放进 PATH
+（随附 `SHA256SUMS.txt` 可校验）。验证：`minirepo version`。
 
 ## 快速上手
 
