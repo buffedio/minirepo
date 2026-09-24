@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+# 最小权限：工作流只需要读仓库
+permissions:
+  contents: read
+
+# 同一 ref 的连续 push 只保留最新一次运行，省 runner
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: gofmt
+        run: |
+          out=$(gofmt -l .)
+          [ -z "$out" ] || { echo "needs gofmt:"; echo "$out"; exit 1; }
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test -race
+        run: go test -count=1 -race -timeout 500s ./...
+
+      - name: make release(5 平台交叉编译)
+        run: make release
+
+      - name: smoke(产物可执行)
+        run: ./dist/minirepo-linux-amd64 version
